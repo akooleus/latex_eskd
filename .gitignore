@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+
+.DS_Store
+
+template_project/*.aux
+template_project/*.log
+template_project/*.pdf
+template_project/*.toc
+template_project/bundle.pdf
+template_project/bom_generated.tex
+template_project/document_sheet_meta.tex
+template_project/appendix_a_sheet_meta.tex
+template_project/bom_sheet_meta.tex

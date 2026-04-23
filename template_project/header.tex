@@ -1,0 +1,87 @@
+\documentclass[russian,utf8,pointsection,nocolumnsxix,nocolumnxxxi,nocolumnxxxii]{eskdtext}
+\usepackage{fontspec}
+\defaultfontfeatures{Mapping=tex-text}
+\usepackage{xecyr}
+\usepackage{xunicode,xltxtra}
+\setmainfont{Times New Roman}
+\setromanfont{Times New Roman}
+\setsansfont{Times New Roman}
+\setmonofont{Times New Roman}
+\newfontfamily\gostfont[Path=./,Extension=.ttf]{GOST_type_A}
+\renewcommand{\ESKDfontShape}{\gostfont\slshape}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{gensymb}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{longtable}
+\usepackage{circuitikz}
+\usepackage{url}
+\setlength{\headheight}{17pt}
+\setlength{\footskip}{6pt}
+\newlength{\AmpTocBottomSafeZone}
+\setlength{\AmpTocBottomSafeZone}{46mm}
+\sloppy
+\addto{\captionsrussian}{%
+  \renewcommand{\figurename}{Рисунок}%
+  \renewcommand{\tablename}{Таблица}%
+}
+\makeatletter
+\def\russian@capsformat{%
+  \def\postchapter{\@aftersepkern}%
+  \def\postsection{\@aftersepkern}%
+  \def\postsubsection{\@aftersepkern}%
+  \def\postsubsubsection{\@aftersepkern}%
+}
+\renewcommand{\ESKDsectionStyle}{\normalfont\large\bfseries}
+\renewcommand{\ESKDsubsectionStyle}{\normalfont\normalsize\bfseries}
+\renewcommand{\ESKDsubsubsectionStyle}{\normalfont\normalsize\bfseries}
+\ESKDsectAlign{section}{Center}
+\ESKDsectAlign{subsection}{Center}
+\ESKDsectAlign{subsubsection}{Center}
+\ESKDsectSkip{section}{0pt}{14pt}
+\ESKDsectSkip{subsection}{10pt}{10pt}
+\ESKDsectSkip{subsubsection}{8pt}{8pt}
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\thesubsection}{\arabic{section}.\arabic{subsection}}
+\renewcommand{\thesubsubsection}{\arabic{section}.\arabic{subsection}.\arabic{subsubsection}}
+\renewcommand{\@seccntformat}[1]{\csname the#1\endcsname.\hspace{0.5em}}
+\newcommand{\AmpTocBreakIfNeeded}[1]{%
+  \ifdim\dimexpr\pagegoal-\pagetotal\relax<\dimexpr\AmpTocBottomSafeZone + #1\relax
+    \newpage
+  \fi}
+\renewcommand{\l@section}[2]{%
+  \ifnum \c@tocdepth >\z@
+    \AmpTocBreakIfNeeded{3\baselineskip}%
+    \addpenalty{\@secpenalty}%
+    {\bfseries\@dottedtocline{1}{0em}{2.2em}{#1}{#2}}%
+  \fi}
+\renewcommand{\l@subsection}[2]{%
+  \ifnum \c@tocdepth >\@ne
+    \AmpTocBreakIfNeeded{2\baselineskip}%
+    {\bfseries\@dottedtocline{2}{1.5em}{3.0em}{#1}{#2}}%
+  \fi}
+\renewcommand{\l@subsubsection}[2]{%
+  \ifnum \c@tocdepth >\tw@
+    \AmpTocBreakIfNeeded{2\baselineskip}%
+    {\bfseries\@dottedtocline{3}{3.8em}{4.0em}{#1}{#2}}%
+  \fi}
+\renewcommand\tableofcontents{%
+  \begingroup
+  \parskip\z@
+  \ESKDsectAlign{section}{Center}
+  \section*{\contentsname
+    \@mkboth{%
+      \MakeUppercase\contentsname}{\MakeUppercase\contentsname}}%
+  \endgroup
+  \begingroup
+  \parskip\z@
+  \@starttoc{toc}%
+  \endgroup}
+\setcounter{tocdepth}{2}
+\let\stdsection\section
+\renewcommand\section{\newpage\stdsection}
+\XeTeXcharclass `\- 24
+\XeTeXinterchartoks 24 0 ={\hskip\z@skip}
+\XeTeXinterchartoks 0 24 ={\nobreak}
+\makeatother

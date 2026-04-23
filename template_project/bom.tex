@@ -1,0 +1,32 @@
+% !TeX program = xelatex
+\documentclass[russian,utf8,hpadding=0mm]{eskdtab}
+\usepackage{fontspec}
+\defaultfontfeatures{Mapping=tex-text}
+\usepackage{xecyr}
+\usepackage{xunicode,xltxtra}
+\usepackage{array}
+\usepackage{tikz}
+\newcommand{\No}{\textnumero}
+\setlength{\headheight}{17pt}
+\setlength{\footskip}{6pt}
+\setmainfont[Path=./,Extension=.ttf]{GOST_type_A}
+\newfontfamily\gostfont[Path=./,Extension=.ttf]{GOST_type_A}
+\renewcommand{\ESKDfontShape}{\gostfont}
+\input{eskd_meta.tex}
+\ESKDunitName{}
+\ESKDdocName{\ProjectTheme}
+\ESKDsignature{\ProjectBOMCode}
+\newcommand{\AmpBOMFont}{\gostfont\fontsize{9pt}{9pt}\selectfont}
+\newcommand{\AmpBOMHeadFont}{\gostfont\fontsize{9pt}{9pt}\selectfont}
+\newcommand{\AmpBOMPosFont}{\gostfont\fontsize{7pt}{7pt}\selectfont}
+\makeatletter
+\newcommand{\AmpBOMCell}[5]{%
+  \put(#1,#2){\makebox(0,0)[lb]{\parbox[c][#4][c]{#3}{#5}}}%
+}
+\makeatother
+\begin{document}
+\IfFileExists{bom_sheet_meta.tex}{\input{bom_sheet_meta.tex}}{}
+\IfFileExists{bom_generated.tex}{\input{bom_generated.tex}}{%
+  \null
+}
+\end{document}
