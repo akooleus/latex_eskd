@@ -19,8 +19,6 @@
 \usepackage{url}
 \setlength{\headheight}{17pt}
 \setlength{\footskip}{6pt}
-\newlength{\AmpTocBottomSafeZone}
-\setlength{\AmpTocBottomSafeZone}{46mm}
 \sloppy
 \addto{\captionsrussian}{%
   \renewcommand{\figurename}{Рисунок}%
@@ -47,7 +45,7 @@
 \renewcommand{\thesubsubsection}{\arabic{section}.\arabic{subsection}.\arabic{subsubsection}}
 \renewcommand{\@seccntformat}[1]{\csname the#1\endcsname.\hspace{0.5em}}
 \newcommand{\AmpTocBreakIfNeeded}[1]{%
-  \ifdim\dimexpr\pagegoal-\pagetotal\relax<\dimexpr\AmpTocBottomSafeZone + #1\relax
+  \ifdim\dimexpr\pagegoal-\pagetotal\relax<#1\relax
     \newpage
   \fi}
 \renewcommand{\l@section}[2]{%
