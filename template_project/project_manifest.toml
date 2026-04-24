@@ -11,6 +11,7 @@ front_pages_excluded = 1
 paper = "a4"
 orientation = "portrait"
 stamp_mode = "first_large_then_small"
+page_layout = "eskd"
 
 [documents.drawing]
 kind = "drawing_doc"

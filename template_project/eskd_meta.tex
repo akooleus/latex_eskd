@@ -1,5 +1,13 @@
 \input{project_meta.tex}
 
+\providecommand{\ProjectLabWorkType}{Лабораторная работа}
+\newif\ifProjectLabWork
+\ifx\ProjectWorkType\ProjectLabWorkType
+  \ProjectLabWorktrue
+\else
+  \ProjectLabWorkfalse
+\fi
+
 \newcommand{\ProjectDrawingCode}{\ProjectDocCode\space \ProjectDrawingDocType}
 \newcommand{\ProjectBOMCode}{\ProjectDocCode\space \ProjectBOMDocType}
 

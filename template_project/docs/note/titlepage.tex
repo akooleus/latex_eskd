@@ -16,7 +16,7 @@
 \providecommand{\ProjectCity}{Новосибирск}
 \newcommand{\ProjectRenderedWorkType}{%
   \ProjectWorkType%
-  \ifx\ProjectWorkType\ProjectLabWorkType
+  \ifProjectLabWork
     \if\relax\detokenize\expandafter{\ProjectLabNumber}\relax
     \else\ №\ProjectLabNumber%
     \fi

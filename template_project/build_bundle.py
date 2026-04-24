@@ -23,6 +23,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 MANIFEST_PATH = ROOT / "project_manifest.toml"
+ALLOWED_PAPERS = {"a0", "a1", "a2", "a3", "a4"}
+ALLOWED_ORIENTATIONS = {"portrait", "landscape"}
+ALLOWED_TEXT_PAGE_LAYOUTS = {"eskd", "plain_frame"}
 
 
 @dataclass(frozen=True)
@@ -39,6 +42,7 @@ class DocumentSpec:
     paper: str
     orientation: str
     stamp_mode: str
+    page_layout: str | None = None
     items_json: Path | None = None
     generated_tex: Path | None = None
 
@@ -49,6 +53,10 @@ class DocumentSpec:
     @property
     def pdf_path(self) -> Path:
         return self.source.with_suffix(".pdf")
+
+    @property
+    def class_meta_path(self) -> Path:
+        return self.source.parent / "class_meta.tex"
 
 
 def require_tool(name: str) -> None:
@@ -126,6 +134,24 @@ def write_sheet_meta(path: Path, *, start_page: int, total_pages: int) -> None:
         ]),
         encoding="utf-8",
     )
+
+
+def write_class_meta(doc: DocumentSpec) -> None:
+    lines: list[str]
+    if doc.kind == "drawing_doc":
+        lines = [f"\\PassOptionsToClass{{{doc.paper}paper,{doc.orientation}}}{{eskdgraph}}", ""]
+    elif doc.kind == "text_doc":
+        effective_layout = doc.page_layout or "legacy_work_type"
+        if effective_layout == "eskd":
+            lines = ["\\AmpConfigureStampedNoteLayout", ""]
+        elif effective_layout == "plain_frame":
+            lines = ["\\AmpConfigurePlainNoteLayout", ""]
+        else:
+            lines = ["\\AmpConfigureNoteLayoutByWorkType", ""]
+    else:
+        return
+
+    doc.class_meta_path.write_text("\n".join(lines), encoding="utf-8")
 
 
 def merge_pdfs(pdf_paths: list[Path], output_path: Path) -> None:
@@ -466,6 +492,7 @@ def load_manifest() -> list[DocumentSpec]:
         paper = str(manifest_value(cfg, "paper")).lower()
         orientation = str(manifest_value(cfg, "orientation")).lower()
         stamp_mode = str(manifest_value(cfg, "stamp_mode")).lower()
+        page_layout = str(cfg["page_layout"]).lower() if "page_layout" in cfg else None
 
         spec = DocumentSpec(
             name=name,
@@ -478,6 +505,7 @@ def load_manifest() -> list[DocumentSpec]:
             paper=paper,
             orientation=orientation,
             stamp_mode=stamp_mode,
+            page_layout=page_layout,
             items_json=(ROOT / str(cfg["items_json"])) if "items_json" in cfg else None,
             generated_tex=(ROOT / str(cfg["generated_tex"])) if "generated_tex" in cfg else None,
         )
@@ -498,10 +526,20 @@ def validate_document_spec(doc: DocumentSpec) -> None:
         raise RuntimeError(f"Document '{doc.name}' has negative front_pages_excluded")
     if doc.stamp_mode not in {"none", "first", "first_large_then_small"}:
         raise RuntimeError(f"Unsupported stamp_mode for '{doc.name}': {doc.stamp_mode}")
+    if doc.paper not in ALLOWED_PAPERS:
+        raise RuntimeError(f"Unsupported paper for '{doc.name}': {doc.paper}")
+    if doc.orientation not in ALLOWED_ORIENTATIONS:
+        raise RuntimeError(f"Unsupported orientation for '{doc.name}': {doc.orientation}")
 
     if doc.kind == "text_doc":
         if doc.paper != "a4" or doc.orientation != "portrait":
             raise RuntimeError("text_doc must stay A4 portrait")
+        if doc.page_layout is not None and doc.page_layout not in ALLOWED_TEXT_PAGE_LAYOUTS:
+            raise RuntimeError(
+                f"Unsupported page_layout for '{doc.name}': {doc.page_layout}"
+            )
+    elif doc.page_layout is not None:
+        raise RuntimeError(f"page_layout is only supported for text_doc: '{doc.name}'")
     if doc.kind == "bom_doc":
         if doc.paper != "a4" or doc.orientation != "portrait":
             raise RuntimeError("bom_doc must stay A4 portrait")
@@ -519,6 +557,8 @@ def build_bundle() -> None:
     for doc in docs:
         if doc.kind == "bom_doc":
             generate_bom_tex(doc)
+        if doc.kind in {"drawing_doc", "text_doc"}:
+            write_class_meta(doc)
 
     for doc in docs:
         doc.sheet_meta.write_text("", encoding="utf-8")

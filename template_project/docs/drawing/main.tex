@@ -1,5 +1,8 @@
 % !TeX program = xelatex
-\documentclass[russian,utf8,a3paper,landscape]{eskdgraph}
+\InputIfFileExists{class_meta.tex}{}{%
+  \PassOptionsToClass{a3paper,landscape}{eskdgraph}%
+}
+\documentclass[russian,utf8]{eskdgraph}
 \usepackage{fontspec}
 \defaultfontfeatures{Mapping=tex-text}
 \usepackage{xecyr}

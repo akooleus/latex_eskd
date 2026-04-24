@@ -9,6 +9,7 @@ template_project/docs/**/*.log
 template_project/docs/**/*.pdf
 template_project/docs/**/*.toc
 template_project/docs/**/sheet_meta.tex
+template_project/docs/**/class_meta.tex
 template_project/docs/bom/generated.tex
 
 # Legacy build artefacts kept locally from older layout revisions.

@@ -44,6 +44,30 @@
 \renewcommand{\thesubsection}{\arabic{section}.\arabic{subsection}}
 \renewcommand{\thesubsubsection}{\arabic{section}.\arabic{subsection}.\arabic{subsubsection}}
 \renewcommand{\@seccntformat}[1]{\csname the#1\endcsname.\hspace{0.5em}}
+\newcommand{\AmpLabDrawPageNumber}{%
+  \setlength{\ESKD@tmpdima}{\ESKDframeX+\ESKD@padding@h}%
+  \setlength{\ESKD@tmpdimb}{\ESKDframeW-2\ESKD@padding@h}%
+  \setlength{\ESKD@tmpdimc}{\ESKDframeY+\ESKD@padding@v-15mm}%
+  \put(\ESKDltu{\ESKD@tmpdima},\ESKDltu{\ESKD@tmpdimc}){%
+    \parbox[b][15mm][c]{\ESKD@tmpdimb}{%
+      \reset@font\normalsize\normalsfcodes
+      \centering\thepage}}}
+\ESKDnewStyle{labreport}{0mm}
+\ESKDputOnStyle{labreport}{frame}{\ESKDdrawFrame}
+\ESKDputOnStyle{labreport}{pagenumber}{\AmpLabDrawPageNumber}
+\newcommand{\AmpConfigurePlainNoteLayout}{%
+  \ESKDdefaultFirstStyle{labreport}%
+  \ESKDdefaultStyle{labreport}}
+\newcommand{\AmpConfigureStampedNoteLayout}{%
+  \ESKDdefaultFirstStyle{formII}%
+  \ESKDdefaultStyle{formIIab}}
+\newcommand{\AmpConfigureNoteLayoutByWorkType}{%
+  \ifProjectLabWork
+    \AmpConfigurePlainNoteLayout
+  \else
+    \AmpConfigureStampedNoteLayout
+  \fi}
+\let\AmpConfigureLabNoteLayout\AmpConfigurePlainNoteLayout
 \newcommand{\AmpTocBreakIfNeeded}[1]{%
   \ifdim\dimexpr\pagegoal-\pagetotal\relax<#1\relax
     \newpage
