@@ -9,10 +9,10 @@
 \newcommand{\No}{\textnumero}
 \setlength{\headheight}{17pt}
 \setlength{\footskip}{6pt}
-\setmainfont[Path=./,Extension=.ttf]{GOST_type_A}
-\newfontfamily\gostfont[Path=./,Extension=.ttf]{GOST_type_A}
+\setmainfont[Path=../../,Extension=.ttf]{GOST_type_A}
+\newfontfamily\gostfont[Path=../../,Extension=.ttf]{GOST_type_A}
 \renewcommand{\ESKDfontShape}{\gostfont}
-\input{eskd_meta.tex}
+\input{../../eskd_meta.tex}
 \ESKDunitName{}
 \ESKDdocName{\ProjectTheme}
 \ESKDsignature{\ProjectBOMCode}
@@ -25,8 +25,8 @@
 }
 \makeatother
 \begin{document}
-\IfFileExists{bom_sheet_meta.tex}{\input{bom_sheet_meta.tex}}{}
-\IfFileExists{bom_generated.tex}{\input{bom_generated.tex}}{%
+\IfFileExists{sheet_meta.tex}{\input{sheet_meta.tex}}{}
+\IfFileExists{generated.tex}{\input{generated.tex}}{%
   \null
 }
 \end{document}

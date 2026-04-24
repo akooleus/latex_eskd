@@ -1,0 +1,42 @@
+% !TeX program = xelatex
+\documentclass[russian,utf8,a3paper,landscape]{eskdgraph}
+\usepackage{fontspec}
+\defaultfontfeatures{Mapping=tex-text}
+\usepackage{xecyr}
+\usepackage{xunicode,xltxtra}
+\usepackage{graphicx}
+\usepackage{circuitikz}
+\usepackage{tikz}
+\ctikzset{bipoles/length=1cm}
+\setmainfont{Times New Roman}
+\newcommand{\No}{\textnumero}
+\setlength{\headheight}{12pt}
+\setlength{\footskip}{4pt}
+\newfontfamily\gostfont[Path=../../,Extension=.ttf]{GOST_type_A}
+\renewcommand{\ESKDfontShape}{\gostfont}
+\input{../../eskd_meta.tex}
+\ESKDsignature{\ProjectDrawingCode}
+\ESKDunitName{}
+\ESKDdocName{\ProjectTheme}
+\ESKDscale{\ProjectScale}
+\begin{document}
+\IfFileExists{sheet_meta.tex}{\input{sheet_meta.tex}}{}
+\begin{ESKDdrawing}
+\IfFileExists{fragments/drawing_fragment.tex}{%
+  \resizebox{0.96\textwidth}{!}{\input{fragments/drawing_fragment.tex}}%
+}{%
+  \IfFileExists{drawing.pdf}{%
+    \includegraphics[width=0.96\textwidth]{drawing.pdf}%
+  }{%
+    \IfFileExists{drawing.png}{%
+      \includegraphics[width=0.96\textwidth]{drawing.png}%
+    }{%
+      \begin{center}
+      \Large Добавьте файл \texttt{fragments/drawing\_fragment.tex},
+      \texttt{drawing.pdf} или \texttt{drawing.png}.
+      \end{center}
+    }%
+  }%
+}%
+\end{ESKDdrawing}
+\end{document}

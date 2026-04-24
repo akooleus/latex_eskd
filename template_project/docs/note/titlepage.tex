@@ -1,62 +1,78 @@
 \providecommand{\ProjectUniversity}{%
 Федеральное государственное бюджетное образовательное учреждение\\
 высшего образования\\[2pt]
-\textbf{«Новосибирский государственный технический университет»}}
+«Новосибирский государственный технический университет»}
 \providecommand{\ProjectDepartment}{Кафедра ...}
+\providecommand{\ProjectWorkType}{Курсовая работа}
+\providecommand{\ProjectLabWorkType}{Лабораторная работа}
+\providecommand{\ProjectLabNumber}{}
 \providecommand{\ProjectSubject}{Название дисциплины}
 \providecommand{\ProjectTheme}{Название проекта}
 \providecommand{\ProjectAuthor}{Иванов И.И.}
-\providecommand{\ProjectGroup}{РТВ00-00}
+\providecommand{\ProjectGroup}{ГРУППА}
 \providecommand{\ProjectFaculty}{Факультет ...}
 \providecommand{\ProjectChecker}{Преподаватель П.П.}
 \providecommand{\ProjectYear}{\the\year}
 \providecommand{\ProjectCity}{Новосибирск}
+\newcommand{\ProjectRenderedWorkType}{%
+  \ProjectWorkType%
+  \ifx\ProjectWorkType\ProjectLabWorkType
+    \if\relax\detokenize\expandafter{\ProjectLabNumber}\relax
+    \else\ №\ProjectLabNumber%
+    \fi
+  \fi}
 
 \begin{titlepage}
-\begin{center}
+\vspace*{-14mm}
+\begingroup
+\centering
 
 \normalsize
-\ProjectUniversity
+\ProjectUniversity\par
 
 \vspace{6pt}
-\ProjectDepartment
+\ProjectDepartment\par
 
 \vfill
 
-{\Large\bfseries Курсовая работа}
+{\Large\bfseries \ProjectRenderedWorkType\par}
 
 \vspace{8pt}
-по дисциплине
+по дисциплине\par
 
 \vspace{4pt}
-«\ProjectSubject»
+«\ProjectSubject»\par
 
 \vspace{12pt}
-Тема: \underline{\hspace{2pt}\ProjectTheme\hspace{2pt}}
+Тема: \underline{\hspace{2pt}\ProjectTheme\hspace{2pt}}\par
 
 \vfill
 
-\end{center}
+\endgroup
 
 \noindent
-\begin{minipage}[t]{0.48\textwidth}
+\begin{minipage}[t][64mm][t]{0.48\textwidth}
 \raggedright
 Выполнил:\\[4pt]
 Студент \begin{tabular}[t]{@{}c@{}} \underline{\hspace{2pt}\ProjectAuthor\hspace{2pt}} \\ {\scriptsize (Ф.\,И.\,О.)} \end{tabular}\\[6pt]
 Группа \underline{\hspace{2pt}\ProjectGroup\hspace{2pt}}\\[6pt]
-\ProjectFaculty\\[12pt]
+\ProjectFaculty\par
+\vspace*{\fill}
+\vspace{7.5mm}
 \rule{5cm}{0.4pt}\\[-2pt]
 {\scriptsize\hspace{1.5cm}подпись}\\[6pt]
 «\rule{1cm}{0.4pt}» \rule{3cm}{0.4pt} \ProjectYear{} г.
 \end{minipage}%
 \hfill
-\begin{minipage}[t]{0.48\textwidth}
+\begin{minipage}[t][64mm][t]{0.48\textwidth}
 \raggedright
 Проверил:\\[4pt]
 Преподаватель \begin{tabular}[t]{@{}c@{}} \underline{\hspace{2pt}\ProjectChecker\hspace{2pt}} \\ {\scriptsize (Ф.\,И.\,О.)} \end{tabular}\\[6pt]
 Балл: \rule{1.5cm}{0.4pt}, ECTS\rule{2cm}{0.4pt},\\[4pt]
-Оценка \rule{4cm}{0.4pt}\\[2pt]
-{\scriptsize «отлично», «хорошо», «удовлетворительно», «неуд.»}\\[6pt]
+Оценка \rule{4cm}{0.4pt}\\[-3pt]
+\smash{\raisebox{4pt}{\scriptsize «отлично», «хорошо», «удовлетворительно», «неуд.»}}\par
+\vspace{4pt}
+\vspace*{\fill}
 \rule{5cm}{0.4pt}\\[-2pt]
 {\scriptsize\hspace{1.5cm}подпись}\\[6pt]
 «\rule{1cm}{0.4pt}» \rule{3cm}{0.4pt} \ProjectYear{} г.
@@ -64,8 +80,8 @@
 
 \vfill
 
-\begin{center}
-\ProjectCity\ \ProjectYear
-\end{center}
+\begin{tikzpicture}[remember picture, overlay]
+\node[anchor=south] at ([yshift=4mm]current page.south) {\ProjectCity\ \ProjectYear};
+\end{tikzpicture}
 
 \end{titlepage}

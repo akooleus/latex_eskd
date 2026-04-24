@@ -3,12 +3,18 @@ __pycache__/
 
 .DS_Store
 
+template_project/bundle.pdf
+template_project/docs/**/*.aux
+template_project/docs/**/*.log
+template_project/docs/**/*.pdf
+template_project/docs/**/*.toc
+template_project/docs/**/sheet_meta.tex
+template_project/docs/bom/generated.tex
+
+# Legacy build artefacts kept locally from older layout revisions.
 template_project/*.aux
 template_project/*.log
 template_project/*.pdf
 template_project/*.toc
-template_project/bundle.pdf
+template_project/*_sheet_meta.tex
 template_project/bom_generated.tex
-template_project/document_sheet_meta.tex
-template_project/appendix_a_sheet_meta.tex
-template_project/bom_sheet_meta.tex

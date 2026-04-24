@@ -1,29 +1,54 @@
 #!/usr/bin/env python3
-"""Autonomous ESKD LaTeX builder.
+"""Build configured ESKD LaTeX documents and merge them into one bundle.
 
-Builds:
-- document.pdf
-- appendix_a.pdf
-- bom.pdf
-- bundle.pdf
-
-Also generates:
-- bom_generated.tex
-- document_sheet_meta.tex
-- appendix_a_sheet_meta.tex
-- bom_sheet_meta.tex
+Project composition is described in ``project_manifest.toml``.
+Supported document kinds:
+- ``text_doc``: A4 portrait textual document; the title page may be excluded
+  from the common sheet count via ``front_pages_excluded``.
+- ``drawing_doc``: graphical sheet (for example A3 landscape).
+- ``bom_doc``: separate bill of materials document; must stay A4 portrait.
 """
 
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import subprocess
 import sys
+import tomllib
+from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
+MANIFEST_PATH = ROOT / "project_manifest.toml"
+
+
+@dataclass(frozen=True)
+class DocumentSpec:
+    """A buildable document declared in ``project_manifest.toml``."""
+
+    name: str
+    kind: str
+    source: Path
+    sheet_meta: Path
+    passes: int
+    count_in_total: bool
+    front_pages_excluded: int
+    paper: str
+    orientation: str
+    stamp_mode: str
+    items_json: Path | None = None
+    generated_tex: Path | None = None
+
+    @property
+    def workdir(self) -> Path:
+        return self.source.parent
+
+    @property
+    def pdf_path(self) -> Path:
+        return self.source.with_suffix(".pdf")
 
 
 def require_tool(name: str) -> None:
@@ -38,10 +63,24 @@ def tail_output(stdout: str, stderr: str, max_lines: int = 60) -> str:
     return "\n".join(lines[-max_lines:])
 
 
+def tex_env() -> dict[str, str]:
+    """Expose template root to TeX so shared ESKD style files stay discoverable."""
+
+    env = os.environ.copy()
+    texinputs = env.get("TEXINPUTS", "")
+    env["TEXINPUTS"] = (
+        f"{ROOT}{os.pathsep}{texinputs}"
+        if texinputs
+        else f"{ROOT}{os.pathsep}"
+    )
+    return env
+
+
 def run_checked(cmd: list[str], *, cwd: Path) -> None:
     result = subprocess.run(
         cmd,
         cwd=cwd,
+        env=tex_env(),
         capture_output=True,
         text=True,
         check=False,
@@ -52,9 +91,9 @@ def run_checked(cmd: list[str], *, cwd: Path) -> None:
         )
 
 
-def compile_latex(tex_path: Path, passes: int) -> None:
-    for _ in range(passes):
-        run_checked(["xelatex", "-interaction=nonstopmode", tex_path.name], cwd=tex_path.parent)
+def compile_latex(doc: DocumentSpec) -> None:
+    for _ in range(doc.passes):
+        run_checked(["xelatex", "-interaction=nonstopmode", doc.source.name], cwd=doc.workdir)
 
 
 def pdf_page_count(pdf_path: Path) -> int:
@@ -180,7 +219,7 @@ def load_bom_json(path: Path) -> list[dict[str, object]]:
     data = json.loads(path.read_text(encoding="utf-8"))
     groups = data.get("groups", [])
     if not isinstance(groups, list):
-        raise RuntimeError("bom_items.json: 'groups' must be a list")
+        raise RuntimeError("items.json: 'groups' must be a list")
     return groups
 
 
@@ -218,7 +257,7 @@ def build_group_rows(
         elif isinstance(raw_designators, list):
             designators = [str(x) for x in raw_designators]
         else:
-            raise RuntimeError("bom_items.json: item.designators must be string or list")
+            raise RuntimeError("items.json: item.designators must be string or list")
 
         ordered = sorted(designators, key=designator_sort_key)
         designator_lines = wrap_designator_text(format_designator_list(ordered))
@@ -315,15 +354,18 @@ def render_bom_page(rows: list[dict[str, str | bool]], *, is_first_page: bool) -
     return "".join(draw)
 
 
-def generate_bom_tex() -> None:
-    groups = load_bom_json(ROOT / "bom" / "bom_items.json")
+def generate_bom_tex(doc: DocumentSpec) -> None:
+    if doc.items_json is None or doc.generated_tex is None:
+        raise RuntimeError("BOM document requires items_json and generated_tex paths")
+
+    groups = load_bom_json(doc.items_json)
 
     blocks: list[tuple[str, list[dict[str, str | bool]]]] = []
     for group in groups:
         title = str(group.get("title", ""))
         items = group.get("items", [])
         if not isinstance(items, list):
-            raise RuntimeError("bom_items.json: group.items must be a list")
+            raise RuntimeError("items.json: group.items must be a list")
         blocks.extend(build_group_rows(title, items, insert_blank_before=bool(blocks)))
 
     pages: list[list[dict[str, str | bool]]] = []
@@ -384,7 +426,87 @@ def generate_bom_tex() -> None:
         if page_index < len(pages) - 1:
             parts.append("\\newpage\n")
 
-    (ROOT / "bom_generated.tex").write_text("".join(parts), encoding="utf-8")
+    doc.generated_tex.write_text("".join(parts), encoding="utf-8")
+
+
+def manifest_value(cfg: dict[str, object], key: str) -> object:
+    if key not in cfg:
+        raise RuntimeError(f"Manifest entry is missing '{key}'")
+    return cfg[key]
+
+
+def load_manifest() -> list[DocumentSpec]:
+    if not MANIFEST_PATH.exists():
+        raise RuntimeError(f"Manifest not found: {MANIFEST_PATH}")
+
+    with MANIFEST_PATH.open("rb") as file:
+        data = tomllib.load(file)
+
+    bundle_cfg = data.get("bundle")
+    documents_cfg = data.get("documents")
+    if not isinstance(bundle_cfg, dict) or not isinstance(documents_cfg, dict):
+        raise RuntimeError("Manifest must contain [bundle] and [documents] sections")
+
+    order = bundle_cfg.get("order")
+    if not isinstance(order, list) or not all(isinstance(item, str) for item in order):
+        raise RuntimeError("[bundle].order must be a list of document names")
+
+    docs: list[DocumentSpec] = []
+    for name in order:
+        cfg = documents_cfg.get(name)
+        if not isinstance(cfg, dict):
+            raise RuntimeError(f"Document '{name}' is missing in [documents]")
+
+        kind = str(manifest_value(cfg, "kind"))
+        source = ROOT / str(manifest_value(cfg, "source"))
+        sheet_meta = ROOT / str(manifest_value(cfg, "sheet_meta"))
+        passes = int(manifest_value(cfg, "passes"))
+        count_in_total = bool(manifest_value(cfg, "count_in_total"))
+        front_pages_excluded = int(cfg.get("front_pages_excluded", 0))
+        paper = str(manifest_value(cfg, "paper")).lower()
+        orientation = str(manifest_value(cfg, "orientation")).lower()
+        stamp_mode = str(manifest_value(cfg, "stamp_mode")).lower()
+
+        spec = DocumentSpec(
+            name=name,
+            kind=kind,
+            source=source,
+            sheet_meta=sheet_meta,
+            passes=passes,
+            count_in_total=count_in_total,
+            front_pages_excluded=front_pages_excluded,
+            paper=paper,
+            orientation=orientation,
+            stamp_mode=stamp_mode,
+            items_json=(ROOT / str(cfg["items_json"])) if "items_json" in cfg else None,
+            generated_tex=(ROOT / str(cfg["generated_tex"])) if "generated_tex" in cfg else None,
+        )
+        validate_document_spec(spec)
+        docs.append(spec)
+
+    return docs
+
+
+def validate_document_spec(doc: DocumentSpec) -> None:
+    if doc.kind not in {"text_doc", "drawing_doc", "bom_doc"}:
+        raise RuntimeError(f"Unsupported document kind: {doc.kind}")
+    if not doc.source.exists():
+        raise RuntimeError(f"Source TeX not found for '{doc.name}': {doc.source}")
+    if doc.passes < 1:
+        raise RuntimeError(f"Document '{doc.name}' must have at least one LaTeX pass")
+    if doc.front_pages_excluded < 0:
+        raise RuntimeError(f"Document '{doc.name}' has negative front_pages_excluded")
+    if doc.stamp_mode not in {"none", "first", "first_large_then_small"}:
+        raise RuntimeError(f"Unsupported stamp_mode for '{doc.name}': {doc.stamp_mode}")
+
+    if doc.kind == "text_doc":
+        if doc.paper != "a4" or doc.orientation != "portrait":
+            raise RuntimeError("text_doc must stay A4 portrait")
+    if doc.kind == "bom_doc":
+        if doc.paper != "a4" or doc.orientation != "portrait":
+            raise RuntimeError("bom_doc must stay A4 portrait")
+        if doc.items_json is None or doc.generated_tex is None:
+            raise RuntimeError("bom_doc requires items_json and generated_tex paths")
 
 
 def build_bundle() -> None:
@@ -392,40 +514,37 @@ def build_bundle() -> None:
     require_tool("pdfinfo")
     require_tool("pdfunite")
 
-    generate_bom_tex()
+    docs = load_manifest()
 
-    bundle_stems = ("document", "appendix_a", "bom")
-    compile_plan = [
-        ("appendix_a", 2),
-        ("bom", 2),
-        ("document", 3),
-    ]
+    for doc in docs:
+        if doc.kind == "bom_doc":
+            generate_bom_tex(doc)
 
-    for stem in bundle_stems:
-        (ROOT / f"{stem}_sheet_meta.tex").write_text("", encoding="utf-8")
+    for doc in docs:
+        doc.sheet_meta.write_text("", encoding="utf-8")
 
-    compiled: dict[str, Path] = {}
-    for stem, passes in compile_plan:
-        tex_path = ROOT / f"{stem}.tex"
-        compile_latex(tex_path, passes)
-        compiled[stem] = tex_path.with_suffix(".pdf")
+    for doc in docs:
+        compile_latex(doc)
 
-    page_counts = {stem: pdf_page_count(compiled[stem]) for stem in bundle_stems}
-    sheet_counts = dict(page_counts)
-    sheet_counts["document"] = max(sheet_counts["document"] - 1, 0)
+    page_counts = {doc.name: pdf_page_count(doc.pdf_path) for doc in docs}
+    sheet_counts = {
+        doc.name: max(page_counts[doc.name] - doc.front_pages_excluded, 0)
+        if doc.count_in_total
+        else 0
+        for doc in docs
+    }
 
     total_pages = sum(sheet_counts.values())
     start_page = 1
-    for stem in bundle_stems:
-        write_sheet_meta(ROOT / f"{stem}_sheet_meta.tex", start_page=start_page, total_pages=total_pages)
-        start_page += sheet_counts[stem]
+    for doc in docs:
+        write_sheet_meta(doc.sheet_meta, start_page=start_page, total_pages=total_pages)
+        if doc.count_in_total:
+            start_page += sheet_counts[doc.name]
 
-    for stem, passes in compile_plan:
-        tex_path = ROOT / f"{stem}.tex"
-        compile_latex(tex_path, passes)
-        compiled[stem] = tex_path.with_suffix(".pdf")
+    for doc in docs:
+        compile_latex(doc)
 
-    merge_pdfs([compiled[stem] for stem in bundle_stems], ROOT / "bundle.pdf")
+    merge_pdfs([doc.pdf_path for doc in docs], ROOT / "bundle.pdf")
 
 
 def main() -> int:

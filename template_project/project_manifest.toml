@@ -1,0 +1,37 @@
+[bundle]
+order = ["note", "drawing", "bom"]
+
+[documents.note]
+kind = "text_doc"
+source = "docs/note/main.tex"
+sheet_meta = "docs/note/sheet_meta.tex"
+passes = 3
+count_in_total = true
+front_pages_excluded = 1
+paper = "a4"
+orientation = "portrait"
+stamp_mode = "first_large_then_small"
+
+[documents.drawing]
+kind = "drawing_doc"
+source = "docs/drawing/main.tex"
+sheet_meta = "docs/drawing/sheet_meta.tex"
+passes = 2
+count_in_total = true
+front_pages_excluded = 0
+paper = "a3"
+orientation = "landscape"
+stamp_mode = "first"
+
+[documents.bom]
+kind = "bom_doc"
+source = "docs/bom/main.tex"
+sheet_meta = "docs/bom/sheet_meta.tex"
+passes = 2
+count_in_total = true
+front_pages_excluded = 0
+paper = "a4"
+orientation = "portrait"
+stamp_mode = "first"
+items_json = "docs/bom/items.json"
+generated_tex = "docs/bom/generated.tex"

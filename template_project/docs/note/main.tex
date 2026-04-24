@@ -1,10 +1,10 @@
 % !TeX program = xelatex
 \newcommand{\No}{\textnumero}
-\input{header.tex}
-\input{eskd_meta.tex}
+\input{../../header_text.tex}
+\input{../../eskd_meta.tex}
 \begin{document}
-\IfFileExists{document_sheet_meta.tex}{\input{document_sheet_meta.tex}}{}
 \input{titlepage.tex}
+\IfFileExists{sheet_meta.tex}{\input{sheet_meta.tex}}{}
 \tableofcontents
 \input{sections/00_task.tex}
 \input{sections/01_intro.tex}
