@@ -15,6 +15,9 @@
 \providecommand{\ProjectChecker}{Преподаватель П.П.}
 \providecommand{\ProjectYear}{\the\year}
 \providecommand{\ProjectCity}{Новосибирск}
+\providecommand{\ProjectThemeTitle}{\AmpThemeLine{\ProjectTheme}}
+\newcommand{\AmpThemeLine}[1]{\underline{\hspace{2pt}#1\hspace{2pt}}}
+\newcommand{\AmpTitleThemeWidth}{0.84\textwidth}
 \newcommand{\ProjectRenderedWorkType}{%
   \ProjectWorkType%
   \ifProjectLabWork
@@ -22,6 +25,14 @@
     \else\ №\ProjectLabNumber%
     \fi
   \fi}
+\newcommand{\AmpRenderProjectTheme}{%
+  \begin{minipage}{\AmpTitleThemeWidth}
+    \centering
+    \begin{tabular}{@{}c@{}}
+    \ProjectThemeTitle
+    \end{tabular}\par
+  \end{minipage}\par
+}
 
 \begin{titlepage}
 \vspace*{-14mm}
@@ -47,7 +58,9 @@
 \vspace{12pt}
 \if\relax\detokenize\expandafter{\ProjectTheme}\relax
 \else
-Тема: \underline{\hspace{2pt}\ProjectTheme\hspace{2pt}}\par
+Тема:\par
+\vspace{4pt}
+\AmpRenderProjectTheme
 \fi
 \if\relax\detokenize\expandafter{\ProjectVariant}\relax
 \else
