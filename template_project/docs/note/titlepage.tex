@@ -8,6 +8,7 @@
 \providecommand{\ProjectLabNumber}{}
 \providecommand{\ProjectSubject}{Название дисциплины}
 \providecommand{\ProjectTheme}{Название проекта}
+\providecommand{\ProjectVariant}{}
 \providecommand{\ProjectAuthor}{Иванов И.И.}
 \providecommand{\ProjectGroup}{ГРУППА}
 \providecommand{\ProjectFaculty}{Факультет ...}
@@ -44,7 +45,15 @@
 «\ProjectSubject»\par
 
 \vspace{12pt}
+\if\relax\detokenize\expandafter{\ProjectTheme}\relax
+\else
 Тема: \underline{\hspace{2pt}\ProjectTheme\hspace{2pt}}\par
+\fi
+\if\relax\detokenize\expandafter{\ProjectVariant}\relax
+\else
+\vspace{6pt}
+Вариант: \ProjectVariant\par
+\fi
 
 \vfill
 

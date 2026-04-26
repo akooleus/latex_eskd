@@ -81,6 +81,7 @@ python3 build_bundle.py
 \newcommand{\ProjectWorkType}{Курсовая работа}
 \newcommand{\ProjectLabNumber}{}
 \newcommand{\ProjectTheme}{Название проекта}
+\newcommand{\ProjectVariant}{}
 \newcommand{\ProjectSubject}{Название дисциплины}
 \newcommand{\ProjectAuthor}{Иванов И.И.}
 \newcommand{\ProjectGroup}{ГРУППА}
@@ -99,5 +100,6 @@ python3 build_bundle.py
 ```
 
 `ProjectYear` по умолчанию берется из системного времени через `\the\year`, но при желании его можно переопределить вручную. `ProjectWorkType` может быть, например, `Курсовая работа`, `Расчетно-графическая работа` или `Лабораторная работа`. Если задано `\ProjectWorkType{Лабораторная работа}` и заполнено `\ProjectLabNumber`, на титульном листе получится строка вида `Лабораторная работа № 3`. Для всех остальных типов работ `ProjectLabNumber` просто игнорируется. Оформление страниц записки при этом задается не здесь, а через `page_layout` в `project_manifest.toml`.
+Поля `ProjectTheme` и `ProjectVariant` независимы друг от друга: если одно из них оставить пустым, соответствующая строка на титульном листе просто не будет напечатана.
 
 `build_bundle.py` сам считает листность комплекта и проставляет `Лист` и `Листов` в документах со штампами. Для текстового документа титульный лист в этот подсчет не входит. Для BOM вручную править TikZ не нужно: таблица строится из `docs/bom/items.json`. Для `drawing_doc` формат и ориентация берутся из манифеста; для `bom_doc` допустим только `A4 portrait`; для `text_doc` допустим только `A4 portrait`, а переключается только `page_layout`.

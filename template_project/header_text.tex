@@ -55,10 +55,21 @@
 \ESKDnewStyle{labreport}{0mm}
 \ESKDputOnStyle{labreport}{frame}{\ESKDdrawFrame}
 \ESKDputOnStyle{labreport}{pagenumber}{\AmpLabDrawPageNumber}
+\newcommand{\AmpPostTitleNoteLayoutAdjustments}{}
+\newcommand{\AmpPlainFrameDeadZone}{\baselineskip}
+\newcommand{\AmpApplyPlainFrameDeadZone}{%
+  \makeatletter
+  \addtolength{\textheight}{-\AmpPlainFrameDeadZone}%
+  \addtolength{\vsize}{-\AmpPlainFrameDeadZone}%
+  \addtolength{\@colht}{-\AmpPlainFrameDeadZone}%
+  \addtolength{\@colroom}{-\AmpPlainFrameDeadZone}%
+  \makeatother}
 \newcommand{\AmpConfigurePlainNoteLayout}{%
+  \renewcommand{\AmpPostTitleNoteLayoutAdjustments}{\AmpApplyPlainFrameDeadZone}%
   \ESKDdefaultFirstStyle{labreport}%
   \ESKDdefaultStyle{labreport}}
 \newcommand{\AmpConfigureStampedNoteLayout}{%
+  \renewcommand{\AmpPostTitleNoteLayoutAdjustments}{}%
   \ESKDdefaultFirstStyle{formII}%
   \ESKDdefaultStyle{formIIab}}
 \newcommand{\AmpConfigureNoteLayoutByWorkType}{%
