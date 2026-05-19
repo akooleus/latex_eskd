@@ -178,11 +178,16 @@ def latex_escape(text: str) -> str:
 
 
 def designator_sort_key(designator: str) -> tuple[str, int, str]:
+    prefix, number = split_designator(designator)
+    return (prefix, number or 0, designator)
+
+
+def split_designator(designator: str) -> tuple[str, int | None]:
     match = re.fullmatch(r"([A-Za-zА-Яа-я]+)(\d+)", designator)
     if not match:
-        return (designator, 0, designator)
+        return (designator, None)
     prefix, number = match.groups()
-    return (prefix, int(number), designator)
+    return (prefix, int(number))
 
 
 def format_designator_list(designators: list[str]) -> str:
@@ -256,26 +261,32 @@ def build_group_rows(
     insert_blank_before: bool,
 ) -> list[tuple[str, list[dict[str, str | bool]]]]:
     blocks: list[tuple[str, list[dict[str, str | bool]]]] = []
-    header_rows: list[dict[str, str | bool]] = []
-    if insert_blank_before:
-        header_rows.append({
-            "kind": "blank",
-            "pos": "",
-            "name": "",
-            "qty": "",
-            "note": "",
-            "line_after": True,
-        })
-    header_rows.append({
+    del insert_blank_before
+    header_rows: list[dict[str, str | bool]] = [{
+        "kind": "blank",
+        "pos": "",
+        "name": "",
+        "qty": "",
+        "note": "",
+        "line_after": True,
+    }, {
         "kind": "group",
         "pos": "",
         "name": latex_escape(title),
         "qty": "",
         "note": "",
         "line_after": True,
-    })
+    }, {
+        "kind": "blank",
+        "pos": "",
+        "name": "",
+        "qty": "",
+        "note": "",
+        "line_after": True,
+    }]
     blocks.append(("section_header", header_rows))
 
+    exploded_items: list[tuple[str, str, str]] = []
     for item in items:
         raw_designators = item.get("designators", [])
         if isinstance(raw_designators, str):
@@ -285,18 +296,39 @@ def build_group_rows(
         else:
             raise RuntimeError("items.json: item.designators must be string or list")
 
-        ordered = sorted(designators, key=designator_sort_key)
-        designator_lines = wrap_designator_text(format_designator_list(ordered))
         name = latex_escape(str(item.get("name", "")))
         note = latex_escape(str(item.get("note", "")))
-        qty = str(item.get("qty", len(designators) if designators else ""))
+        if designators:
+            exploded_items.extend((designator, name, note) for designator in designators)
+            continue
 
         item_rows: list[dict[str, str | bool]] = [{
             "kind": "item",
-            "pos": latex_escape(designator_lines[0] if designator_lines else ""),
+            "pos": "",
             "name": name,
-            "qty": qty,
+            "qty": str(item.get("qty", "")),
             "note": note,
+            "line_after": True,
+        }]
+        blocks.append(("item", item_rows))
+
+    exploded_items.sort(key=lambda item: designator_sort_key(item[0]))
+    current_designators: list[str] = []
+    current_name = ""
+    current_note = ""
+    current_prefix = ""
+    previous_number: int | None = None
+
+    def flush() -> None:
+        if not current_designators:
+            return
+        designator_lines = wrap_designator_text(format_designator_list(current_designators))
+        item_rows: list[dict[str, str | bool]] = [{
+            "kind": "item",
+            "pos": latex_escape(designator_lines[0] if designator_lines else ""),
+            "name": current_name,
+            "qty": str(len(current_designators)),
+            "note": current_note,
             "line_after": len(designator_lines) <= 1,
         }]
         for continuation in designator_lines[1:]:
@@ -310,6 +342,29 @@ def build_group_rows(
             })
         item_rows[-1]["line_after"] = True
         blocks.append(("item", item_rows))
+
+    for designator, name, note in exploded_items:
+        prefix, number = split_designator(designator)
+        continues_run = (
+            bool(current_designators)
+            and name == current_name
+            and note == current_note
+            and prefix == current_prefix
+            and previous_number is not None
+            and number is not None
+            and number == previous_number + 1
+        )
+        if not continues_run:
+            flush()
+            current_designators = [designator]
+            current_name = name
+            current_note = note
+            current_prefix = prefix
+        else:
+            current_designators.append(designator)
+        previous_number = number
+
+    flush()
 
     return blocks
 
